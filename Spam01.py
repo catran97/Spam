@@ -2,32 +2,39 @@
 #spamgondola@gmail.com Спамер
 #gondola2000
 
-#ykfgodnew@gmail.com Ярик
-#artur.tikhonov.97@mail.ru Артур
-#sanya.barckov@yandex.ru Саня
-#goodmorningsam66@gmail.com Жека
-
-from email.mime.text import MIMEText
-from email.header import Header
 import smtplib
-import io
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from openpyxl import load_workbook
 
-def sendMail(messagetext):
-    sender = "spamgondola@gmail.com"
-    password = "gondola2000"
-    recipient = "goodmorningsam66@gmail.com"
-    subject = "TEST MESSAGE"
-    text = MIMEText(messagetext, "plain", "utf-8")
-    smtp_server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-    smtp_server.login(sender, password)
-    message = "Subject: {}\n\n{}".format(subject, text)
-    smtp_server.sendmail(sender, recipient, message)
-    smtp_server.close()
+sender = "spamgondola@gmail.com"
+password ="gondola2000"
 
-mail_body = 'message.txt'
+def sendMail(content, mail):
+    message = MIMEMultipart('alternative')
+    message['Subject'] = "Spamgondola test 3"
+    message['From'] = sender
+    message['To'] = mail
+    message.add_header('Content-Type','text/html')
+    text = MIMEText(content, 'html')
+    message.attach(text)
+    mailserver = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+    mailserver.login(sender, password)
+    mailserver.sendmail(message['From'], message['To'], message.as_string())
+    mailserver.quit()
+
+mail_body = 'message.html'
 with open(mail_body , encoding="utf8") as file:
-    messagetext = file.read()
-sendMail(messagetext)
+    content = file.read()
 
-
-
+ex_file = load_workbook('emails.xlsx')
+sheet = ex_file['email']
+column = sheet['D']
+for cell in column:
+    if cell.value is None:
+        continue
+    else:
+        mail=cell.value
+        sendMail(content, mail)
+        print('Send to: ', mail)
+        mail=''
